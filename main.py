@@ -2,11 +2,12 @@ import cv2
 import pyautogui
 import numpy as np
 
+from find_ball import find_ball
+from find_targeting_line import find_targeting_line
+
 # change depending on game screen size
 game_res = [1152, 720]
 border = [0, 20]
-
-ball = cv2.imread('templates/Ball.png', 0)
 
 # threshold = 0.95
 
@@ -21,18 +22,17 @@ try:
             cv2.COLOR_BGR2GRAY
         )
 
-        ball_area = img[int(img.shape[0] / 2): img.shape[0], int(img.shape[1] * 1 / 3): int(img.shape[1] * 2 / 3)]
+        # cut out the bottom middle third of the screen as ROI for the ball
+        ball_roi = img[int(img.shape[0] / 2): img.shape[0], int(img.shape[1] * 1 / 3): int(img.shape[1] * 2 / 3)]
 
-        res = cv2.matchTemplate(ball_area, ball, cv2.TM_CCORR_NORMED)
+        # insert the ball ROI back into the full image
+        img[int(img.shape[0] / 2): img.shape[0], int(img.shape[1] * 1 / 3): int(img.shape[1] * 2 / 3)] = find_ball(ball_roi)
 
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        w, h = ball.shape[::-1]
+        # cut out the bottom middle third of the screen as ROI for the targeting line
+        targeting_line_roi = img[0: img.shape[0], int(img.shape[1] * 1 / 3): int(img.shape[1] * 2 / 3)]
 
-        top_left = max_loc
-        bottom_right = (top_left[0] + w, top_left[1] + h)
-        cv2.rectangle(ball_area, top_left, bottom_right, 0, 2)
-
-        img[int(img.shape[0] / 2): img.shape[0], int(img.shape[1] * 1 / 3): int(img.shape[1] * 2 / 3)] = ball_area
+        # insert the targeting line ROI back into the full image
+        img[0: img.shape[0], int(img.shape[1] * 1 / 3): int(img.shape[1] * 2 / 3)] = find_targeting_line(targeting_line_roi)
 
         cv2.imshow('image', img)
 
